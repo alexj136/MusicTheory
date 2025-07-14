@@ -57,14 +57,22 @@ intervalText x = case x of
 
 instance Show Triad where
     show triad@(Triad (r, _))
-        | triad == majorTriad r = (show r) ++ "maj"  ++ (showTriadNotes triad)
-        | triad == minorTriad r = (show r) ++ "min"  ++ (showTriadNotes triad)
-        | triad == diminTriad r = (show r) ++ "dim"  ++ (showTriadNotes triad)
-        | triad == sus4Triad  r = (show r) ++ "sus4" ++ (showTriadNotes triad)
+        | isTriad triad majorTd = (show r) ++ "maj"  ++ (showTriadNotes triad)
+        | isTriad triad minorTd = (show r) ++ "min"  ++ (showTriadNotes triad)
+        | isTriad triad diminTd = (show r) ++ "dim"  ++ (showTriadNotes triad)
+        | isTriad triad sus4Td  = (show r) ++ "sus4" ++ (showTriadNotes triad)
+        | isTriad triad sus2Td  = (show r) ++ "sus2" ++ (showTriadNotes triad)
         | otherwise = showTriadNotes triad
 
 instance Eq Triad where
     Triad (_, s1) == Triad (_, s2) = s1 == s2
+
+to :: Note -> Note -> Interval
+to x y = interval ((fromEnum y - fromEnum x) `mod` 12)
+
+isTriad :: Triad -> TriadIntervals -> Bool
+isTriad the@(Triad (r, set)) td = let possibleRoots = S.toList set in
+    any (the ==) (map (applyTd td) possibleRoots)
 
 showTriadNotes :: Triad -> String
 showTriadNotes (Triad (root, set)) = show (S.toList set)
@@ -106,9 +114,6 @@ majorSeventh  = interval 11
 octave        = interval 12
 root          = interval 0
 
-to :: Note -> Note -> Interval
-to x y = interval ((fromEnum y - fromEnum x) `mod` 12)
-
 applyScale :: Note -> Scale -> [Note]
 applyScale r = map ($ r)
 
@@ -135,20 +140,15 @@ majorPentatonic = majorScale `without` [3, 6]
 extended :: Scale -> Scale
 extended scale = scale ++ extended scale
 
-majorTd, minorTd, diminTd, sus4Td :: TriadIntervals
+majorTd, minorTd, diminTd, sus4Td, sus2Td :: TriadIntervals
 majorTd = (majorThird, perfectFifth)
 minorTd = (minorThird, perfectFifth)
 diminTd = (minorThird, tritone)
 sus4Td  = (perfectFourth, perfectFifth)
+sus2Td  = (majorSecond, perfectFifth)
 
 applyTd :: TriadIntervals -> Note -> Triad
 applyTd (i1, i2) r = triad [r, i1 r, i2 r]
-
-majorTriad, minorTriad, diminTriad :: Note -> Triad
-majorTriad = applyTd majorTd
-minorTriad = applyTd minorTd
-diminTriad = applyTd diminTd
-sus4Triad  = applyTd sus4Td
 
 buildKey :: Scale -> Note -> [Triad]
 buildKey scale r = take (length scale) $ td (applyScale r (extended scale))
