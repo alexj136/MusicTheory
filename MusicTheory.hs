@@ -5,31 +5,20 @@ module Music where
 import Prelude hiding ((<>))
 import qualified Data.Set as S
 import qualified Data.Map as M
+import Data.List (find)
 
 data Note = A | A# | B | C | C# | D | D# | E | F | F# | G | G#
     deriving (Show, Eq, Ord, Enum)
 
 as, bs, cs, ds, es, fs, gs, bA, bB, bC, bD, bE, bF, bG :: Note
-as = A#
-bs = C
-cs = C#
-ds = D#
-es = F
-fs = F#
-gs = G#
-bA = G#
-bB = A#
-bC = B
-bD = C#
-bE = D#
-bF = E
-bG = F#
+as = A# ; bs = C  ; cs = C# ; ds = D# ; es = F  ; fs = F# ; gs = G#
+bA = G# ; bB = A# ; bC = B  ; bD = C# ; bE = D# ; bF = E  ; bG = F#
 
 newtype Interval = Interval Int
 
 type Scale = [Interval]
 
-type TriadIntervals = (Interval, Interval)
+type TriadTemplate = (Interval, Interval)
 
 newtype Triad = Triad (Note, S.Set Note) deriving (Ord)
 
@@ -47,6 +36,7 @@ instance Show Interval where
         (9 , 0) ->    "major sixth (" ++ (show x) ++ ")"
         (10, 0) ->  "minor seventh (" ++ (show x) ++ ")"
         (11, 0) ->  "major seventh (" ++ (show x) ++ ")"
+        (0 , 1) -> "1 octave"
         (0 , o) -> (show o) ++ " octaves"
         (i , o) -> (show (Interval i)) ++ " and " ++ show (Interval (12 * o))
 
@@ -57,26 +47,23 @@ instance Ord Interval where
     Interval i <= Interval j = (i `mod` 12) <= (j `mod` 12)
 
 instance Show Triad where
-    show triad@(Triad (r, _))
-        | isTriad triad majorTd = (show r) ++ "maj"  ++ (showTriadNotes triad)
-        | isTriad triad minorTd = (show r) ++ "min"  ++ (showTriadNotes triad)
-        | isTriad triad diminTd = (show r) ++ "dim"  ++ (showTriadNotes triad)
-        | isTriad triad sus4Td  = (show r) ++ "sus4" ++ (showTriadNotes triad)
-        | isTriad triad sus2Td  = (show r) ++ "sus2" ++ (showTriadNotes triad)
-        | otherwise = showTriadNotes triad
+    show triad@(Triad (r, ns)) =
+        (case find (isTriad triad) (M.keys triadTemplates) of
+            Just triadName -> (show r) ++ (triadTemplates M.! triadName)
+            Nothing -> ""
+        ) ++ show (S.toList ns)
 
 instance Eq Triad where
     Triad (_, s1) == Triad (_, s2) = s1 == s2
 
-isTriad :: Triad -> TriadIntervals -> Bool
-isTriad the@(Triad (r, set)) td = let possibleRoots = S.toList set in
-    any (the ==) (map (applyTd td) possibleRoots)
-
-showTriadNotes :: Triad -> String
-showTriadNotes (Triad (root, set)) = show (S.toList set)
+isTriad :: Triad -> TriadTemplate -> Bool
+isTriad triad td = any (triad ==) (map (applyTd td) (notes triad))
 
 triad :: [Note] -> Triad
 triad notes@(root:_) = Triad (root, S.fromList notes)
+
+notes :: Triad -> [Note]
+notes (Triad (_, s)) = S.toList s
 
 data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
@@ -127,32 +114,16 @@ majorPentatonic = majorScale `without` [3, 6]
 extended :: Scale -> Scale
 extended scale = scale ++ extended scale
 
-majorTd, minorTd, diminTd, sus4Td, sus2Td :: TriadIntervals
-majorTd = (majorThird, perfectFifth)
-minorTd = (minorThird, perfectFifth)
-diminTd = (minorThird, tritone)
-sus4Td  = (perfectFourth, perfectFifth)
-sus2Td  = (majorSecond, perfectFifth)
-
-triadIntervals :: [TriadIntervals]
-triadIntervals =
-    [ majorTd
-    , minorTd
-    , diminTd
-    , sus4Td
-    , sus2Td
+triadTemplates :: M.Map TriadTemplate String
+triadTemplates = M.fromList
+    [ ((majorThird   , perfectFifth), "maj" )
+    , ((minorThird   , perfectFifth), "min" )
+    , ((minorThird   , tritone     ), "dim" )
+    , ((perfectFourth, perfectFifth), "sus4")
+    , ((majorSecond  , perfectFifth), "sus2")
     ]
 
-triadIntervalNames :: M.Map TriadIntervals String
-triadIntervalNames = M.fromList
-    [ (majorTd, "maj")
-    , (minorTd, "min")
-    , (diminTd, "dim")
-    , (sus4Td, "sus4")
-    , (sus2Td, "sus2")
-    ]
-
-applyTd :: TriadIntervals -> Note -> Triad
+applyTd :: TriadTemplate -> Note -> Triad
 applyTd (i1, i2) r = triad [r, r <> i1, r <> i2]
 
 buildKey :: Scale -> Note -> [Triad]
@@ -170,9 +141,14 @@ perfectCadence = [V, I]
 applyProgression :: [Triad] -> ChordProgression -> [Triad]
 applyProgression key = map (\ref -> key !! (fromEnum ref))
 
+putLines :: Show a => [a] -> IO ()
+putLines [] = return ()
+putLines (l:ls) = do putStrLn (show l) ; putLines ls
+
 main :: IO ()
 main = do
     putStrLn $ "C major scale: " ++ show (map (C <>) majorScale)
-    putStrLn $ "Key of C: " ++ show (majorKey C)
-    putStrLn $ "Major Pentatonic Key of C: " ++
-            show ((buildKey majorPentatonic) C)
+    putStrLn $ "\nKey of C:"
+    putLines $ majorKey C
+    putStrLn $ "\nMajor Pentatonic Key of C:"
+    putLines $ buildKey majorPentatonic C
