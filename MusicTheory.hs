@@ -20,7 +20,7 @@ type Scale = [Interval]
 
 type TriadTemplate = (Interval, Interval)
 
-newtype Triad = Triad (Note, S.Set Note) deriving (Ord)
+type Triad = (Note, Note, Note)
 
 instance Show Interval where
     show (Interval x) = case (x `mod` 12, x `div` 12) of
@@ -46,24 +46,23 @@ instance Eq Interval where
 instance Ord Interval where
     Interval i <= Interval j = (i `mod` 12) <= (j `mod` 12)
 
-instance Show Triad where
-    show triad@(Triad (r, ns)) =
-        (case find (isTriad triad) (M.keys triadTemplates) of
-            Just triadName -> (show r) ++ (triadTemplates M.! triadName)
-            Nothing -> ""
-        ) ++ show (S.toList ns)
-
-instance Eq Triad where
-    Triad (_, s1) == Triad (_, s2) = s1 == s2
+showTriad :: Triad -> String
+showTriad triad@(r, _3, _5) =
+    (case find (isTriad triad) (M.keys triadTemplates) of
+        Just name -> (show r) ++ ' ' : (triadTemplates M.! name) ++ " "
+        Nothing -> ""
+    ) ++ show triad
 
 isTriad :: Triad -> TriadTemplate -> Bool
-isTriad triad td = any (triad ==) (map (applyTd td) (notes triad))
-
-triad :: [Note] -> Triad
-triad notes@(root:_) = Triad (root, S.fromList notes)
+isTriad triad tt = any (triad ==) (map (applyTemplate tt) (notes triad))
 
 notes :: Triad -> [Note]
-notes (Triad (_, s)) = S.toList s
+notes (r, _3, _5) = [r, _3, _5]
+
+matches :: TriadTemplate -> Triad -> Maybe Note
+matches tt triad@(r, _, _)
+    | applyTemplate tt r == triad = Just r
+    | otherwise                   = Nothing
 
 data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
@@ -116,21 +115,21 @@ extended scale = scale ++ extended scale
 
 triadTemplates :: M.Map TriadTemplate String
 triadTemplates = M.fromList
-    [ ((majorThird   , perfectFifth), "maj" )
-    , ((minorThird   , perfectFifth), "min" )
-    , ((minorThird   , tritone     ), "dim" )
-    , ((perfectFourth, perfectFifth), "sus4")
-    , ((majorSecond  , perfectFifth), "sus2")
+    [ ((majorThird   , perfectFifth), "major")
+    , ((minorThird   , perfectFifth), "minor")
+    , ((minorThird   , tritone     ), "dimin")
+    , ((perfectFourth, perfectFifth), "sus 4")
+    , ((majorSecond  , perfectFifth), "sus 2")
     ]
 
-applyTd :: TriadTemplate -> Note -> Triad
-applyTd (i1, i2) r = triad [r, r <> i1, r <> i2]
+applyTemplate :: TriadTemplate -> Note -> Triad
+applyTemplate (i1, i2) r = (r, r <> i1, r <> i2)
 
 buildKey :: Scale -> Note -> [Triad]
 buildKey scale r = take (length scale) $ td (applyScale r (extended scale))
     where 
     td :: [Note] -> [Triad]
-    td scl = triad [scl !! 0, scl !! 2, scl !! 4] : td (tail scl)
+    td scl = (scl !! 0, scl !! 2, scl !! 4) : td (tail scl)
 
 majorKey :: Note -> [Triad]
 majorKey = buildKey majorScale
@@ -141,14 +140,14 @@ perfectCadence = [V, I]
 applyProgression :: [Triad] -> ChordProgression -> [Triad]
 applyProgression key = map (\ref -> key !! (fromEnum ref))
 
-putLines :: Show a => [a] -> IO ()
-putLines [] = return ()
-putLines (l:ls) = do putStrLn (show l) ; putLines ls
+putLines :: (a -> String) -> [a] -> IO ()
+putLines _      []     = return ()
+putLines showFn (l:ls) = do putStrLn (showFn l) ; putLines showFn ls
 
 main :: IO ()
 main = do
     putStrLn $ "C major scale: " ++ show (map (C <>) majorScale)
     putStrLn $ "\nKey of C:"
-    putLines $ majorKey C
+    putLines showTriad $ majorKey C
     putStrLn $ "\nMajor Pentatonic Key of C:"
-    putLines $ buildKey majorPentatonic C
+    putLines showTriad $ buildKey majorPentatonic C
