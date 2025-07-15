@@ -2,7 +2,9 @@
 
 module Music where
 
+import Prelude hiding ((<>))
 import qualified Data.Set as S
+import qualified Data.Map as M
 
 data Note = A | A# | B | C | C# | D | D# | E | F | F# | G | G#
     deriving (Show, Eq, Ord, Enum)
@@ -23,7 +25,7 @@ bE = D#
 bF = E
 bG = F#
 
-type Interval = Note -> Note
+newtype Interval = Interval Int
 
 type Scale = [Interval]
 
@@ -32,28 +34,27 @@ type TriadIntervals = (Interval, Interval)
 newtype Triad = Triad (Note, S.Set Note) deriving (Ord)
 
 instance Show Interval where
-    show i = let x = i A in intervalText $ fromEnum x - fromEnum A
+    show (Interval x) = case (x `mod` 12, x `div` 12) of
+        (0 , 0) ->         "unison (" ++ (show x) ++ ")"
+        (1 , 0) ->   "minor second (" ++ (show x) ++ ")"
+        (2 , 0) ->   "major second (" ++ (show x) ++ ")"
+        (3 , 0) ->    "minor third (" ++ (show x) ++ ")"
+        (4 , 0) ->    "major third (" ++ (show x) ++ ")"
+        (5 , 0) -> "perfect fourth (" ++ (show x) ++ ")"
+        (6 , 0) ->        "tritone (" ++ (show x) ++ ")"
+        (7 , 0) ->  "perfect fifth (" ++ (show x) ++ ")"
+        (8 , 0) ->    "minor sixth (" ++ (show x) ++ ")"
+        (9 , 0) ->    "major sixth (" ++ (show x) ++ ")"
+        (10, 0) ->  "minor seventh (" ++ (show x) ++ ")"
+        (11, 0) ->  "major seventh (" ++ (show x) ++ ")"
+        (0 , o) -> (show o) ++ " octaves"
+        (i , o) -> (show (Interval i)) ++ " and " ++ show (Interval (12 * o))
 
 instance Eq Interval where
-    i == j = x == y where x = i A ; y = j A
+    Interval i == Interval j = (i `mod` 12) == (j `mod` 12)
 
 instance Ord Interval where
-    i <= j = x <= y where x = i A ; y = j A
-
-intervalText :: Int -> String
-intervalText x = case x of
-        0 -> "root"
-        1 -> "semitone"
-        2 -> "tone"
-        3 -> "minor third"
-        4 -> "major third"
-        5 -> "perfect fourth"
-        6 -> "tritone"
-        7 -> "perfect fifth"
-        8 -> "minor sixth"
-        9 -> "major sixth"
-        10 -> "minor seventh"
-        11 -> "major seventh"
+    Interval i <= Interval j = (i `mod` 12) <= (j `mod` 12)
 
 instance Show Triad where
     show triad@(Triad (r, _))
@@ -66,9 +67,6 @@ instance Show Triad where
 
 instance Eq Triad where
     Triad (_, s1) == Triad (_, s2) = s1 == s2
-
-to :: Note -> Note -> Interval
-to x y = interval ((fromEnum y - fromEnum x) `mod` 12)
 
 isTriad :: Triad -> TriadIntervals -> Bool
 isTriad the@(Triad (r, set)) td = let possibleRoots = S.toList set in
@@ -84,38 +82,27 @@ data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
 type ChordProgression = [ChordRef]
 
-semitone :: Interval
-semitone G# = A
-semitone x = succ x
-
-flattened :: Interval
-flattened A = G#
-flattened x = pred x
-
-interval :: Int -> Interval
-interval n x = (iterate semitone x) !! (n `mod` 12)
-
-inverse :: Interval -> Interval
-inverse i = let x = i A in interval $ negate $ fromEnum x
-
 tone, majorSecond, minorThird, majorThird, perfectFourth, tritone, perfectFifth,
     minorSixth, majorSixth, minorSeventh, majorSeventh, root :: Interval
-tone          = interval 2
+tone          = Interval 2
 majorSecond   = tone
-minorThird    = interval 3
-majorThird    = interval 4
-perfectFourth = interval 5
-tritone       = interval 6
-perfectFifth  = interval 7
-minorSixth    = interval 8
-majorSixth    = interval 9
-minorSeventh  = interval 10
-majorSeventh  = interval 11
-octave        = interval 12
-root          = interval 0
+minorThird    = Interval 3
+majorThird    = Interval 4
+perfectFourth = Interval 5
+tritone       = Interval 6
+perfectFifth  = Interval 7
+minorSixth    = Interval 8
+majorSixth    = Interval 9
+minorSeventh  = Interval 10
+majorSeventh  = Interval 11
+octave        = Interval 12
+root          = Interval 0
+
+(<>) :: Note -> Interval -> Note
+n <> (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
 
 applyScale :: Note -> Scale -> [Note]
-applyScale r = map ($ r)
+applyScale r = map (r <>)
 
 majorScale :: Scale
 majorScale =
@@ -147,8 +134,26 @@ diminTd = (minorThird, tritone)
 sus4Td  = (perfectFourth, perfectFifth)
 sus2Td  = (majorSecond, perfectFifth)
 
+triadIntervals :: [TriadIntervals]
+triadIntervals =
+    [ majorTd
+    , minorTd
+    , diminTd
+    , sus4Td
+    , sus2Td
+    ]
+
+triadIntervalNames :: M.Map TriadIntervals String
+triadIntervalNames = M.fromList
+    [ (majorTd, "maj")
+    , (minorTd, "min")
+    , (diminTd, "dim")
+    , (sus4Td, "sus4")
+    , (sus2Td, "sus2")
+    ]
+
 applyTd :: TriadIntervals -> Note -> Triad
-applyTd (i1, i2) r = triad [r, i1 r, i2 r]
+applyTd (i1, i2) r = triad [r, r <> i1, r <> i2]
 
 buildKey :: Scale -> Note -> [Triad]
 buildKey scale r = take (length scale) $ td (applyScale r (extended scale))
@@ -167,5 +172,7 @@ applyProgression key = map (\ref -> key !! (fromEnum ref))
 
 main :: IO ()
 main = do
-    putStrLn $ "C major scale: " ++ show (map ($ C) majorScale)
+    putStrLn $ "C major scale: " ++ show (map (C <>) majorScale)
     putStrLn $ "Key of C: " ++ show (majorKey C)
+    putStrLn $ "Major Pentatonic Key of C: " ++
+            show ((buildKey majorPentatonic) C)
