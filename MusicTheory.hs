@@ -54,15 +54,23 @@ showTriad triad@(r, _3, _5) =
     ) ++ show triad
 
 isTriad :: Triad -> TriadTemplate -> Bool
-isTriad triad tt = any (triad ==) (map (applyTemplate tt) (notes triad))
+isTriad td tt = any (\perm -> isTriadSimple perm tt) (permutations td)
+    where
+    isTriadSimple :: Triad -> TriadTemplate -> Bool
+    isTriadSimple td@(rt, _3, _5) tt = td == applyTemplate tt rt
 
 notes :: Triad -> [Note]
 notes (r, _3, _5) = [r, _3, _5]
 
-matches :: TriadTemplate -> Triad -> Maybe Note
-matches tt triad@(r, _, _)
-    | applyTemplate tt r == triad = Just r
-    | otherwise                   = Nothing
+permutations :: Triad -> [Triad]
+permutations (rt, _3, _5) =
+    [ (rt, _3, _5)
+    , (_5, rt, _3)
+    , (_3, _5, rt)
+    , (rt, _5, _3)
+    , (_3, rt, _5)
+    , (_5, _3, rt)
+    ]
 
 data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
