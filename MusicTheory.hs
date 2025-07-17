@@ -59,9 +59,6 @@ isTriad td tt = any (\perm -> isTriadSimple perm tt) (permutations td)
     isTriadSimple :: Triad -> TriadTemplate -> Bool
     isTriadSimple td@(rt, _3, _5) tt = td == applyTemplate tt rt
 
-notes :: Triad -> [Note]
-notes (r, _3, _5) = [r, _3, _5]
-
 permutations :: Triad -> [Triad]
 permutations (rt, _3, _5) =
     [ (rt, _3, _5)
@@ -95,8 +92,36 @@ root          = Interval 0
 (<>) :: Note -> Interval -> Note
 n <> (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
 
+flatten :: Interval -> Interval
+flatten (Interval i) = Interval (i - 1)
+
 applyScale :: Note -> Scale -> [Note]
 applyScale r = map (r <>)
+
+extended :: Scale -> Scale
+extended scale = scale ++ extended scale
+
+without :: [a] -> [Int] -> [a]
+without (h:t) idxs | 0 `elem` idxs = without t (filterZeroesAndSubOne idxs)
+                   | otherwise     = h : (without t (map pred idxs))
+    where filterZeroesAndSubOne = map pred . filter (/= 0)
+without l     [] = l
+
+-- Apply a function to the elements of the given list at the given indices.
+-- Indices must be in ascending order, without duplicates.
+applyAt :: [Int] -> (a -> a) -> [a] -> [a]
+applyAt []    _ l     = l
+applyAt (0:i) f (h:t) = (f h) : applyAt (map pred i) f t
+applyAt i     f (h:t) = h : applyAt (map pred i) f t
+
+triadTemplates :: M.Map TriadTemplate String
+triadTemplates = M.fromList
+    [ ((majorThird   , perfectFifth), "major")
+    , ((minorThird   , perfectFifth), "minor")
+    , ((minorThird   , tritone     ), "dimin")
+    , ((perfectFourth, perfectFifth), "sus 4")
+    , ((majorSecond  , perfectFifth), "sus 2")
+    ]
 
 majorScale :: Scale
 majorScale =
@@ -109,26 +134,35 @@ majorScale =
     , majorSeventh
     ]
 
-without :: [a] -> [Int] -> [a]
-without (h:t) idxs | 0 `elem` idxs = without t (filterZeroesAndSubOne idxs)
-                   | otherwise     = h : (without t (map pred idxs))
-    where filterZeroesAndSubOne = map pred . filter (/= 0)
-without l     [] = l
+majorPentatonicScale :: Scale
+majorPentatonicScale = majorScale `without` [3, 6]
+    {-[ root
+    , majorSecond
+    , majorThird
+    , perfectFifth
+    , majorSixth
+    ]-}
 
-majorPentatonic :: Scale
-majorPentatonic = majorScale `without` [3, 6]
+-- AKA Aeolian mode
+naturalMinorScale :: Scale
+naturalMinorScale = applyAt [2, 5, 6] flatten majorScale
+    {-[ root
+    , majorSecond
+    , minorThird
+    , perfectFourth
+    , perfectFifth
+    , minorSixth
+    , minorSeventh
+    ]-}
 
-extended :: Scale -> Scale
-extended scale = scale ++ extended scale
-
-triadTemplates :: M.Map TriadTemplate String
-triadTemplates = M.fromList
-    [ ((majorThird   , perfectFifth), "major")
-    , ((minorThird   , perfectFifth), "minor")
-    , ((minorThird   , tritone     ), "dimin")
-    , ((perfectFourth, perfectFifth), "sus 4")
-    , ((majorSecond  , perfectFifth), "sus 2")
-    ]
+minorPentatonicScale :: Scale
+minorPentatonicScale = naturalMinorScale `without` [1, 5]
+    {-[ root
+    , minorThird
+    , perfectFourth
+    , perfectFifth
+    , minorSeventh
+    ]-}
 
 applyTemplate :: TriadTemplate -> Note -> Triad
 applyTemplate (i1, i2) r = (r, r <> i1, r <> i2)
@@ -155,7 +189,10 @@ putLines showFn (l:ls) = do putStrLn (showFn l) ; putLines showFn ls
 main :: IO ()
 main = do
     putStrLn $ "C major scale: " ++ show (map (C <>) majorScale)
+    putStrLn $ "C major pentatonic scale: " ++ show (map (C <>) majorPentatonicScale)
+    putStrLn $ "G minor pentatonic scale: " ++ show (map (G <>) minorPentatonicScale)
+    putStrLn $ "E natural minor scale: " ++ show (map (E <>) naturalMinorScale)
     putStrLn $ "\nKey of C:"
     putLines showTriad $ majorKey C
     putStrLn $ "\nMajor Pentatonic Key of C:"
-    putLines showTriad $ buildKey majorPentatonic C
+    putLines showTriad $ buildKey majorPentatonicScale C
