@@ -7,6 +7,8 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.List (find)
 
+import Utils
+
 data Note = A | A# | B | C | C# | D | D# | E | F | F# | G | G#
     deriving (Show, Eq, Ord, Enum)
 
@@ -59,16 +61,6 @@ isTriad td tt = any (\perm -> isTriadSimple perm tt) (permutations td)
     isTriadSimple :: Triad -> TriadTemplate -> Bool
     isTriadSimple td@(rt, _3, _5) tt = td == applyTemplate tt rt
 
-permutations :: Triad -> [Triad]
-permutations (rt, _3, _5) =
-    [ (rt, _3, _5)
-    , (_5, rt, _3)
-    , (_3, _5, rt)
-    , (rt, _5, _3)
-    , (_3, rt, _5)
-    , (_5, _3, rt)
-    ]
-
 data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
 type ChordProgression = [ChordRef]
@@ -101,19 +93,6 @@ applyScale r = map (r <>)
 extended :: Scale -> Scale
 extended scale = scale ++ extended scale
 
-without :: [a] -> [Int] -> [a]
-without (h:t) idxs | 0 `elem` idxs = without t (filterZeroesAndSubOne idxs)
-                   | otherwise     = h : (without t (map pred idxs))
-    where filterZeroesAndSubOne = map pred . filter (/= 0)
-without l     [] = l
-
--- Apply a function to the elements of the given list at the given indices.
--- Indices must be in ascending order, without duplicates.
-applyAt :: [Int] -> (a -> a) -> [a] -> [a]
-applyAt []    _ l     = l
-applyAt (0:i) f (h:t) = (f h) : applyAt (map pred i) f t
-applyAt i     f (h:t) = h : applyAt (map pred i) f t
-
 triadTemplates :: M.Map TriadTemplate String
 triadTemplates = M.fromList
     [ ((majorThird   , perfectFifth), "major")
@@ -135,7 +114,7 @@ majorScale =
     ]
 
 majorPentatonicScale :: Scale
-majorPentatonicScale = majorScale `without` [3, 6]
+majorPentatonicScale = without [3, 6] majorScale
     {-[ root
     , majorSecond
     , majorThird
@@ -156,7 +135,7 @@ naturalMinorScale = applyAt [2, 5, 6] flatten majorScale
     ]-}
 
 minorPentatonicScale :: Scale
-minorPentatonicScale = naturalMinorScale `without` [1, 5]
+minorPentatonicScale = without [1, 5] naturalMinorScale
     {-[ root
     , minorThird
     , perfectFourth
@@ -181,10 +160,6 @@ perfectCadence = [V, I]
 
 applyProgression :: [Triad] -> ChordProgression -> [Triad]
 applyProgression key = map (\ref -> key !! (fromEnum ref))
-
-putLines :: (a -> String) -> [a] -> IO ()
-putLines _      []     = return ()
-putLines showFn (l:ls) = do putStrLn (showFn l) ; putLines showFn ls
 
 main :: IO ()
 main = do
