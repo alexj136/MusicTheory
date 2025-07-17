@@ -1,6 +1,5 @@
 {-# LANGUAGE MagicHash #-}
-
-module Music where
+module MusicTheory where
 
 import Prelude hiding ((<>))
 import qualified Data.Set as S
@@ -115,33 +114,13 @@ majorScale =
 
 majorPentatonicScale :: Scale
 majorPentatonicScale = without [3, 6] majorScale
-    {-[ root
-    , majorSecond
-    , majorThird
-    , perfectFifth
-    , majorSixth
-    ]-}
 
 -- AKA Aeolian mode
 naturalMinorScale :: Scale
 naturalMinorScale = applyAt [2, 5, 6] flatten majorScale
-    {-[ root
-    , majorSecond
-    , minorThird
-    , perfectFourth
-    , perfectFifth
-    , minorSixth
-    , minorSeventh
-    ]-}
 
 minorPentatonicScale :: Scale
 minorPentatonicScale = without [1, 5] naturalMinorScale
-    {-[ root
-    , minorThird
-    , perfectFourth
-    , perfectFifth
-    , minorSeventh
-    ]-}
 
 applyTemplate :: TriadTemplate -> Note -> Triad
 applyTemplate (i1, i2) r = (r, r <> i1, r <> i2)
@@ -160,14 +139,3 @@ perfectCadence = [V, I]
 
 applyProgression :: [Triad] -> ChordProgression -> [Triad]
 applyProgression key = map (\ref -> key !! (fromEnum ref))
-
-main :: IO ()
-main = do
-    putStrLn $ "C major scale: " ++ show (map (C <>) majorScale)
-    putStrLn $ "C major pentatonic scale: " ++ show (map (C <>) majorPentatonicScale)
-    putStrLn $ "G minor pentatonic scale: " ++ show (map (G <>) minorPentatonicScale)
-    putStrLn $ "E natural minor scale: " ++ show (map (E <>) naturalMinorScale)
-    putStrLn $ "\nKey of C:"
-    putLines showTriad $ majorKey C
-    putStrLn $ "\nMajor Pentatonic Key of C:"
-    putLines showTriad $ buildKey majorPentatonicScale C

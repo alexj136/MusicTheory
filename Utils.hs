@@ -1,16 +1,17 @@
 module Utils where
-
+--
 -- Generic utility functions that don't depend on any music theory.
+--
 
 -- Get all permutations of a three-value tuple, including the original.
 permutations :: (a, a, a) -> [(a, a, a)]
-permutations (rt, _3, _5) =
-    [ (rt, _3, _5)
-    , (_5, rt, _3)
-    , (_3, _5, rt)
-    , (rt, _5, _3)
-    , (_3, rt, _5)
-    , (_5, _3, rt)
+permutations (a, b, c) =
+    [ (a, b, c)
+    , (c, a, b)
+    , (b, c, a)
+    , (a, c, b)
+    , (b, a, c)
+    , (c, b, a)
     ]
 
 -- Given a list of elements and a list of indices, return the list of elements
