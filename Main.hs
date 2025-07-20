@@ -4,6 +4,7 @@ import Prelude hiding ((<>))
 
 import Utils
 import MusicTheory
+import StringedInstrument
 import qualified TestMusicTheory as TMT
 import TestFramework
 
