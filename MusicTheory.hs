@@ -15,7 +15,7 @@ as, bs, cs, ds, es, fs, gs, bA, bB, bC, bD, bE, bF, bG :: Note
 as = A# ; bs = C  ; cs = C# ; ds = D# ; es = F  ; fs = F# ; gs = G#
 bA = G# ; bB = A# ; bC = B  ; bD = C# ; bE = D# ; bF = E  ; bG = F#
 
-newtype Interval = Interval Int
+data Interval = Interval { value :: Int }
 
 type Scale = [Interval]
 
@@ -82,6 +82,9 @@ root          = Interval 0
 
 (<>) :: Note -> Interval -> Note
 n <> (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
+
+(><) :: Note -> Note -> Interval
+n >< m = Interval $ (fromEnum m) - (fromEnum n)
 
 flatten :: Interval -> Interval
 flatten (Interval i) = Interval (i - 1)
