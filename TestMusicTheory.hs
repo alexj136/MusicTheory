@@ -49,4 +49,10 @@ tests =
             , minorSeventh
             ]
 
+    , Test "relativise and unrelativise are identity" $ and $
+        [ unrelativise (relativise majorScale) == majorScale
+        , unrelativise (relativise naturalMinorScale) == naturalMinorScale
+        , unrelativise (relativise majorPentatonicScale) == majorPentatonicScale
+        ]
+
     ]

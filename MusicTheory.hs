@@ -86,6 +86,12 @@ n <> (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
 (><) :: Note -> Note -> Interval
 n >< m = Interval $ (fromEnum m) - (fromEnum n)
 
+(-~) :: Interval -> Interval -> Interval
+(Interval i) -~ (Interval j) = Interval (i - j)
+
+(+~) :: Interval -> Interval -> Interval
+(Interval i) +~ (Interval j) = Interval (i + j)
+
 flatten :: Interval -> Interval
 flatten (Interval i) = Interval (i - 1)
 
@@ -94,6 +100,22 @@ applyScale r = map (r <>)
 
 extended :: Scale -> Scale
 extended scale = scale ++ extended scale
+
+-- Convert an absolute scale (where each interval is given relative to the root)
+-- to a relative scale (where each interval is relative to the previous note in
+-- the scale).
+relativise :: Scale -> Scale
+relativise scale = take (length scale) $ rel $ extended scale
+    where
+    rel (n:[m]) = [m -~ n]
+    rel (n:m:s) = m -~ n : rel (m:s)
+
+unrelativise :: Scale -> Scale
+unrelativise scale = root : unrel root scale
+    where
+    unrel :: Interval -> Scale -> Scale
+    unrel n (m:[o]) = [n +~ m]
+    unrel n (m:s)   = let o = n +~ m in o : unrel o s
 
 triadTemplates :: M.Map TriadTemplate String
 triadTemplates = M.fromList
@@ -124,6 +146,9 @@ naturalMinorScale = applyAt [2, 5, 6] flatten majorScale
 
 minorPentatonicScale :: Scale
 minorPentatonicScale = without [1, 5] naturalMinorScale
+
+mixolydian :: Scale
+mixolydian = applyAt [6] flatten majorScale
 
 applyTemplate :: TriadTemplate -> Note -> Triad
 applyTemplate (i1, i2) r = (r, r <> i1, r <> i2)
