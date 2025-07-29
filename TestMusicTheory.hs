@@ -49,10 +49,12 @@ tests =
             , minorSeventh
             ]
 
-    , Test "relativise and unrelativise are identity" $ and $
+    , Test "Composing relativise and unrelativise is identity." $ and $
         [ unrelativise (relativise majorScale) == majorScale
         , unrelativise (relativise naturalMinorScale) == naturalMinorScale
         , unrelativise (relativise majorPentatonicScale) == majorPentatonicScale
         ]
+
+    , testEqual "Mixolydian mode definitions agree." mixolydian' mixolydian
 
     ]

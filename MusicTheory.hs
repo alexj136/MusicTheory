@@ -105,7 +105,7 @@ extended scale = scale ++ extended scale
 -- to a relative scale (where each interval is relative to the previous note in
 -- the scale).
 relativise :: Scale -> Scale
-relativise scale = take (length scale) $ rel $ extended scale
+relativise scale = take (length scale) $ rel $ scale ++ [head scale]
     where
     rel (n:[m]) = [m -~ n]
     rel (n:m:s) = m -~ n : rel (m:s)
@@ -147,8 +147,17 @@ naturalMinorScale = applyAt [2, 5, 6] flatten majorScale
 minorPentatonicScale :: Scale
 minorPentatonicScale = without [1, 5] naturalMinorScale
 
-mixolydian :: Scale
-mixolydian = applyAt [6] flatten majorScale
+mixolydian' :: Scale
+mixolydian' = applyAt [6] flatten majorScale
+
+ionian, dorian, phrygian, lydian, mixolydian, aeolian, locrian :: Scale
+ionian     = majorScale
+dorian     = unrelativise $ take 7 $ drop 1 $ relativise majorScale
+phrygian   = unrelativise $ take 7 $ drop 2 $ relativise majorScale
+lydian     = unrelativise $ take 7 $ drop 3 $ relativise majorScale
+mixolydian = unrelativise $ take 7 $ drop 4 $ relativise majorScale
+aeolian    = unrelativise $ take 7 $ drop 5 $ relativise majorScale
+locrian    = unrelativise $ take 7 $ drop 6 $ relativise majorScale
 
 applyTemplate :: TriadTemplate -> Note -> Triad
 applyTemplate (i1, i2) r = (r, r <> i1, r <> i2)
