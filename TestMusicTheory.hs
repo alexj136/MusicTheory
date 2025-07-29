@@ -4,6 +4,7 @@ module TestMusicTheory where
 import Prelude hiding ((<>))
 import TestFramework
 import MusicTheory
+import Utils
 
 tests :: [Test]
 tests =
@@ -55,6 +56,14 @@ tests =
         , unrelativise (relativise majorPentatonicScale) == majorPentatonicScale
         ]
 
-    , testEqual "Mixolydian mode definitions agree." mixolydian' mixolydian
+    , let mixolydian' :: Scale
+          mixolydian' = applyAt [6] flatten majorScale
+      in testEqual "Mixolydian mode definitions agree." mixolydian' mixolydian
+
+    , let dorian' :: Scale
+          dorian' = applyAt [2, 6] flatten majorScale
+      in testEqual "Dorian mode definitions agree." dorian' dorian
+
+    , testEqual "Natural minor scale is Aeolian mode" naturalMinorScale aeolian
 
     ]

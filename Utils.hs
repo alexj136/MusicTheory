@@ -3,9 +3,10 @@ module Utils where
 -- Generic utility functions that don't depend on any music theory.
 --
 
-headToEnd :: [a] -> [a]
-headToEnd (h:t) = t ++ [h]
-headToEnd []    = error "empty list"
+rotate :: Int -> [a] -> [a]
+rotate _ [] = error "empty list"
+rotate 0 l     = l
+rotate n (h:t) = rotate (n-1) (t ++ [h])
 
 -- Get all permutations of a three-value tuple, including the original.
 permutations :: (a, a, a) -> [(a, a, a)]
