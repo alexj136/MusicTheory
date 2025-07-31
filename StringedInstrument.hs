@@ -1,7 +1,8 @@
 module StringedInstrument where
 
-import Prelude hiding (String)
-import qualified Prelude (String)
+import Prelude hiding (String, (<>))
+import qualified Prelude as P (String)
+import Data.List (intercalate)
 
 import MusicTheory
 
@@ -19,14 +20,37 @@ tuning = map open
 -- A simple instrument is an instrument where each string starts at the
 -- headstock and has the same number of frets, e.g. a guitar, ukulele or
 -- mandolin.
-simpleInstrument :: [Note] -> Instrument
-simpleInstrument = map $ \n -> String n 0 0
+simpleInstrument :: Int -> [Note] -> Instrument
+simpleInstrument frets = map $ \n -> String n frets 0
 
 stdGuitar :: Instrument
-stdGuitar = simpleInstrument [E, A, D, G, B, E]
+stdGuitar = simpleInstrument 22 [E, A, D, G, B, E]
 
 dadgadGuitar :: Instrument
-dadgadGuitar = simpleInstrument [D, A, D, G, A, D]
+dadgadGuitar = simpleInstrument 22 [D, A, D, G, A, D]
+
+stdBanjo :: Instrument
+stdBanjo = String G 17 5 : simpleInstrument 22 [D, G, B, D]
+
+fretboardScaleDiagram :: Scale -> Note -> Instrument -> P.String
+fretboardScaleDiagram scale note strings =
+    intercalate "\n" $ map strDiag (reverse strings)
+    where
+    scl :: [Note]
+    scl = applyScale note scale
+
+    strDiag :: String -> P.String
+    strDiag (String _    0     _) = ""
+    strDiag (String open frets 0) = this ++ strDiag next where
+        next = String (open <> semitone) (frets - 1) 0
+        this = if open `elem` scl
+            then "|-" ++ showNote open ++ "-"
+            else "|----"
+    strDiag (String open frets n) =
+            "     " ++ strDiag (String open frets (n-1))
+
+    showNote :: Note -> P.String
+    showNote n = case show n of { [c1, c2] -> [c1, c2] ; [c] -> [c , '-'] }
 
 inTriadFingerings :: Triad -> String -> [Interval]
 inTriadFingerings = itf 0

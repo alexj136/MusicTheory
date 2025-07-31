@@ -64,8 +64,10 @@ data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
 type ChordProgression = [ChordRef]
 
-tone, majorSecond, minorThird, majorThird, perfectFourth, tritone, perfectFifth,
-    minorSixth, majorSixth, minorSeventh, majorSeventh, root :: Interval
+semitone, tone, majorSecond, minorThird, majorThird, perfectFourth, tritone,
+    perfectFifth, minorSixth, majorSixth, minorSeventh, majorSeventh,
+    root :: Interval
+semitone      = Interval 1
 tone          = Interval 2
 majorSecond   = tone
 minorThird    = Interval 3
