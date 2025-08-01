@@ -16,3 +16,5 @@ main = do
     putLines showTriad $ majorKey C
     putStrLn $ "\nMajor Pentatonic Key of C:"
     putLines showTriad $ buildKey majorPentatonicScale C
+    putStrLn $ "\nFingerings in the (D, F, A) triad on the G string:"
+    putStrLn $ show $ inTriadFingerings (D, F, A) (String G 22 0)

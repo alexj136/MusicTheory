@@ -1,7 +1,7 @@
 {-# LANGUAGE MagicHash #-}
 module TestMusicTheory where
 
-import Prelude hiding ((<>))
+import Prelude
 import TestFramework
 import MusicTheory
 import Utils
@@ -10,16 +10,16 @@ tests :: [Test]
 tests =
 
     [ Test "C major scale is correct." $
-        (map (C <>) majorScale) == [C, D, E, F, G, A, B]
+        (map (C ~+) majorScale) == [C, D, E, F, G, A, B]
 
     , Test "C major pentatonic scale is correct." $
-        (map (C <>) majorPentatonicScale) == [C, D, E, G, A]
+        (map (C ~+) majorPentatonicScale) == [C, D, E, G, A]
 
     , Test "G minor pentatonic scale is correct." $
-        (map (G <>) minorPentatonicScale) == [G, A#, C, D, F]
+        (map (G ~+) minorPentatonicScale) == [G, A#, C, D, F]
 
     , Test "E natural minor scale is correct." $
-        (map (E <>) naturalMinorScale) == [E, F#, G, A, B, C, D]
+        (map (E ~+) naturalMinorScale) == [E, F#, G, A, B, C, D]
 
     , Test "Major pentatonic scale has correct intervals." $
         majorPentatonicScale ==

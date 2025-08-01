@@ -1,6 +1,6 @@
 module StringedInstrument where
 
-import Prelude hiding (String, (<>))
+import Prelude hiding (String)
 import qualified Prelude as P (String)
 import Data.List (intercalate)
 
@@ -42,7 +42,7 @@ fretboardScaleDiagram scale note strings =
     strDiag :: String -> P.String
     strDiag (String _    0     _) = ""
     strDiag (String open frets 0) = this ++ strDiag next where
-        next = String (open <> semitone) (frets - 1) 0
+        next = String (open ~+ semitone) (frets - 1) 0
         this = if open `elem` scl
             then "|-" ++ showNote open ++ "-"
             else "|----"
@@ -57,5 +57,5 @@ inTriadFingerings = itf 0
     where
     itf :: Int -> Triad -> String -> [Interval]
     itf from t@(r, _3, _5) s@(String n f o)
-        | from <= f = [n >< r, n >< _3, n >< _5] ++ itf (from + 12) t s
+        | from <= f = [r ~- n, _3 ~- n, _5 ~- n] ++ itf (from + 12) t s
         | otherwise = []

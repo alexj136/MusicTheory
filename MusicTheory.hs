@@ -1,7 +1,7 @@
 {-# LANGUAGE MagicHash #-}
 module MusicTheory where
 
-import Prelude hiding ((<>))
+import Prelude
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.List (find)
@@ -82,11 +82,11 @@ majorSeventh  = Interval 11
 octave        = Interval 12
 root          = Interval 0
 
-(<>) :: Note -> Interval -> Note
-n <> (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
+(~+) :: Note -> Interval -> Note
+n ~+ (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
 
-(><) :: Note -> Note -> Interval
-n >< m = Interval $ (fromEnum m) - (fromEnum n)
+(~-) :: Note -> Note -> Interval
+n ~- m = Interval $ (fromEnum n) - (fromEnum m)
 
 (-~) :: Interval -> Interval -> Interval
 (Interval i) -~ (Interval j) = Interval (i - j)
@@ -98,7 +98,7 @@ flatten :: Interval -> Interval
 flatten (Interval i) = Interval (i - 1)
 
 applyScale :: Note -> Scale -> [Note]
-applyScale r = map (r <>)
+applyScale r = map (r ~+)
 
 octaveUp :: Scale -> Scale
 octaveUp = map (+~ (Interval 12))
@@ -161,7 +161,7 @@ aeolian    = unrelativise $ rotate 5 $ relativise majorScale
 locrian    = unrelativise $ rotate 6 $ relativise majorScale
 
 applyTemplate :: TriadTemplate -> Note -> Triad
-applyTemplate (i1, i2) r = (r, r <> i1, r <> i2)
+applyTemplate (i1, i2) r = (r, r ~+ i1, r ~+ i2)
 
 buildKey :: Scale -> Note -> [Triad]
 buildKey scale r = take (length scale) $ td (applyScale r (extended scale))
