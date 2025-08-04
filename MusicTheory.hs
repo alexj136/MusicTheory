@@ -69,6 +69,7 @@ semitone, tone, majorSecond, minorThird, majorThird, perfectFourth, tritone,
     root :: Interval
 semitone      = Interval 1
 tone          = Interval 2
+minorSecond   = semitone
 majorSecond   = tone
 minorThird    = Interval 3
 majorThird    = Interval 4
