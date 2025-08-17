@@ -8,17 +8,6 @@ rotate _ [] = error "empty list"
 rotate 0 l     = l
 rotate n (h:t) = rotate (n-1) (t ++ [h])
 
--- Get all permutations of a three-value tuple, including the original.
-permutations :: (a, a, a) -> [(a, a, a)]
-permutations (a, b, c) =
-    [ (a, b, c)
-    , (c, a, b)
-    , (b, c, a)
-    , (a, c, b)
-    , (b, a, c)
-    , (c, b, a)
-    ]
-
 -- Given a list of elements and a list of indices, return the list of elements
 -- with the elements at the given indices removed.
 without :: [Int] -> [a] -> [a]

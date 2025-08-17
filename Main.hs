@@ -13,8 +13,10 @@ main = do
     putStrLn "\nMUSIC THEORY"
     testMain TMT.tests
     putStrLn $ "\nKey of C:"
-    putLines showTriad $ majorKey C
+    putLines showChord $ majorKey C
     putStrLn $ "\nMajor Pentatonic Key of C:"
-    putLines showTriad $ buildKey majorPentatonicScale C
-    putStrLn $ "\nFingerings in the (D, F, A) triad on the G string:"
-    putStrLn $ show $ inTriadFingerings (D, F, A) (String G 22 0)
+    putLines showChord $ buildKey majorPentatonicScale C
+    putStrLn $ "\nFingerings in the [D, F, A] triad on the G string:"
+    putStrLn $ show $ inChordFingerings [D, F, A] (String G 22 0)
+    putStrLn $ "\nC major scale on banjo:"
+    putStrLn $ fretboardScaleDiagram majorScale C stdBanjo

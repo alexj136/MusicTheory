@@ -4,24 +4,29 @@ module MusicTheory where
 import Prelude
 import qualified Data.Set as S
 import qualified Data.Map as M
-import Data.List (find)
+import Data.List (find, permutations)
 
 import Utils
 
-data Note = A | A# | B | C | C# | D | D# | E | F | F# | G | G#
+data PitchClass = C | C# | D | D# | E | F | F# | G | G# | A | A# | B
     deriving (Show, Eq, Ord, Enum)
 
-as, bs, cs, ds, es, fs, gs, bA, bB, bC, bD, bE, bF, bG :: Note
+as, bs, cs, ds, es, fs, gs, bA, bB, bC, bD, bE, bF, bG :: PitchClass
 as = A# ; bs = C  ; cs = C# ; ds = D# ; es = F  ; fs = F# ; gs = G#
 bA = G# ; bB = A# ; bC = B  ; bD = C# ; bE = D# ; bF = E  ; bG = F#
 
-data Interval = Interval { value :: Int }
+data Interval = Interval { interval :: Int } deriving (Eq, Ord)
+
+data Note = Note { note :: Int } deriving (Eq, Ord)
+
+pitchClass :: Note -> PitchClass
+pitchClass (Note note) = toEnum $ note `mod` 12
 
 type Scale = [Interval]
 
-type TriadTemplate = (Interval, Interval)
+type ChordTemplate = [Interval]
 
-type Triad = (Note, Note, Note)
+type Chord = [PitchClass]
 
 instance Show Interval where
     show (Interval x) = case (x `mod` 12, x `div` 12) of
@@ -41,24 +46,27 @@ instance Show Interval where
         (0 , o) -> (show o) ++ " octaves"
         (i , o) -> (show (Interval i)) ++ " and " ++ show (Interval (12 * o))
 
-instance Eq Interval where
-    Interval i == Interval j = (i `mod` 12) == (j `mod` 12)
-
-instance Ord Interval where
-    Interval i <= Interval j = (i `mod` 12) <= (j `mod` 12)
-
-showTriad :: Triad -> String
-showTriad triad@(r, _3, _5) =
-    (case find (isTriad triad) (M.keys triadTemplates) of
-        Just name -> (show r) ++ ' ' : (triadTemplates M.! name) ++ " "
+showChord :: Chord -> String
+showChord chord@(r:_) =
+    (case find (isChord chord) (M.keys chordTemplates) of
+        Just name -> (show r) ++ ' ' : (chordTemplates M.! name) ++ " "
         Nothing -> ""
-    ) ++ show triad
+    ) ++ show chord
 
-isTriad :: Triad -> TriadTemplate -> Bool
-isTriad td tt = any (\perm -> isTriadSimple perm tt) (permutations td)
+chordTemplates :: M.Map ChordTemplate String
+chordTemplates = M.fromList
+    [ ([root, majorThird   , perfectFifth], "major")
+    , ([root, minorThird   , perfectFifth], "minor")
+    , ([root, minorThird   , tritone     ], "dimin")
+    , ([root, perfectFourth, perfectFifth], "sus 4")
+    , ([root, majorSecond  , perfectFifth], "sus 2")
+    ]
+
+isChord :: Chord -> ChordTemplate -> Bool
+isChord cd tt = any (\perm -> isChordSimple perm tt) (permutations cd)
     where
-    isTriadSimple :: Triad -> TriadTemplate -> Bool
-    isTriadSimple td@(rt, _3, _5) tt = td == applyTemplate tt rt
+    isChordSimple :: Chord -> ChordTemplate -> Bool
+    isChordSimple cd tt = cd == applyTemplate tt (head cd)
 
 data ChordRef = I | II | III | IV | V | VI | VII deriving (Show, Eq, Ord, Enum)
 
@@ -83,10 +91,10 @@ majorSeventh  = Interval 11
 octave        = Interval 12
 root          = Interval 0
 
-(~+) :: Note -> Interval -> Note
+(~+) :: PitchClass -> Interval -> PitchClass
 n ~+ (Interval i) = toEnum (((fromEnum n) + i) `mod` 12)
 
-(~-) :: Note -> Note -> Interval
+(~-) :: PitchClass -> PitchClass -> Interval
 n ~- m = Interval $ (fromEnum n) - (fromEnum m)
 
 (-~) :: Interval -> Interval -> Interval
@@ -98,7 +106,7 @@ n ~- m = Interval $ (fromEnum n) - (fromEnum m)
 flatten :: Interval -> Interval
 flatten (Interval i) = Interval (i - 1)
 
-applyScale :: Note -> Scale -> [Note]
+applyScale :: PitchClass -> Scale -> [PitchClass]
 applyScale r = map (r ~+)
 
 octaveUp :: Scale -> Scale
@@ -122,15 +130,6 @@ unrelativise scale = root : unrel root scale
     unrel :: Interval -> Scale -> Scale
     unrel n (m:[o]) = [n +~ m]
     unrel n (m:s)   = let o = n +~ m in o : unrel o s
-
-triadTemplates :: M.Map TriadTemplate String
-triadTemplates = M.fromList
-    [ ((majorThird   , perfectFifth), "major")
-    , ((minorThird   , perfectFifth), "minor")
-    , ((minorThird   , tritone     ), "dimin")
-    , ((perfectFourth, perfectFifth), "sus 4")
-    , ((majorSecond  , perfectFifth), "sus 2")
-    ]
 
 majorScale :: Scale
 majorScale =
@@ -161,20 +160,20 @@ mixolydian = unrelativise $ rotate 4 $ relativise majorScale
 aeolian    = unrelativise $ rotate 5 $ relativise majorScale
 locrian    = unrelativise $ rotate 6 $ relativise majorScale
 
-applyTemplate :: TriadTemplate -> Note -> Triad
-applyTemplate (i1, i2) r = (r, r ~+ i1, r ~+ i2)
+applyTemplate :: ChordTemplate -> PitchClass -> Chord
+applyTemplate intervals rootNote = map ((~+) rootNote) intervals
 
-buildKey :: Scale -> Note -> [Triad]
-buildKey scale r = take (length scale) $ td (applyScale r (extended scale))
+buildKey :: Scale -> PitchClass -> [Chord]
+buildKey scale r = take (length scale) $ cd (applyScale r (extended scale))
     where 
-    td :: [Note] -> [Triad]
-    td scl = (scl !! 0, scl !! 2, scl !! 4) : td (tail scl)
+    cd :: [PitchClass] -> [Chord]
+    cd scl = [scl !! 0, scl !! 2, scl !! 4] : cd (tail scl)
 
-majorKey :: Note -> [Triad]
+majorKey :: PitchClass -> [Chord]
 majorKey = buildKey majorScale
 
 perfectCadence :: ChordProgression
 perfectCadence = [V, I]
 
-applyProgression :: [Triad] -> ChordProgression -> [Triad]
+applyProgression :: [Chord] -> ChordProgression -> [Chord]
 applyProgression key = map (\ref -> key !! (fromEnum ref))
