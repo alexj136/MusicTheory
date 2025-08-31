@@ -19,8 +19,14 @@ data Interval = Interval { interval :: Int } deriving (Eq, Ord)
 
 data Note = Note { note :: Int } deriving (Eq, Ord)
 
+instance Show Note where
+    show n = (show (pitchClass n)) ++ subscript (octave n)
+
 pitchClass :: Note -> PitchClass
 pitchClass (Note note) = toEnum $ note `mod` 12
+
+octave :: Note -> Int
+octave (Note note) = note `div` 12
 
 type Scale = [Interval]
 
@@ -58,6 +64,7 @@ chordTemplates = M.fromList
     [ ([root, majorThird   , perfectFifth], "major")
     , ([root, minorThird   , perfectFifth], "minor")
     , ([root, minorThird   , tritone     ], "dimin")
+    , ([root, majorThird   , minorSixth  ], "augmented")
     , ([root, perfectFourth, perfectFifth], "sus 4")
     , ([root, majorSecond  , perfectFifth], "sus 2")
     ]
@@ -88,7 +95,7 @@ minorSixth    = Interval 8
 majorSixth    = Interval 9
 minorSeventh  = Interval 10
 majorSeventh  = Interval 11
-octave        = Interval 12
+fullOctave    = Interval 12
 root          = Interval 0
 
 (~+) :: PitchClass -> Interval -> PitchClass

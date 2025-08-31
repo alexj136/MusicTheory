@@ -1,4 +1,7 @@
 module Utils where
+
+import qualified Data.Map as M
+
 --
 -- Generic utility functions that don't depend on any music theory.
 --
@@ -31,3 +34,9 @@ applyAtMaybe i     f (h:t) = h : applyAtMaybe (map pred i) f t
 putLines :: (a -> String) -> [a] -> IO ()
 putLines _      []     = return ()
 putLines showFn (l:ls) = do putStrLn (showFn l) ; putLines showFn ls
+
+subscript :: Int -> String
+subscript x = map (\c -> M.findWithDefault c c m) (show x)
+    where
+    m :: M.Map Char Char
+    m = M.fromList $ zip "0123456789" "₀₁₂₃₄₅₆₇₈₉"
