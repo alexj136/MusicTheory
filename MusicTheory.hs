@@ -61,12 +61,17 @@ showChord chord@(r:_) =
 
 chordTemplates :: M.Map ChordTemplate String
 chordTemplates = M.fromList
-    [ ([root, majorThird   , perfectFifth], "major")
-    , ([root, minorThird   , perfectFifth], "minor")
-    , ([root, minorThird   , tritone     ], "dimin")
-    , ([root, majorThird   , minorSixth  ], "augmented")
-    , ([root, perfectFourth, perfectFifth], "sus 4")
-    , ([root, majorSecond  , perfectFifth], "sus 2")
+    [ ([root, majorThird   , perfectFifth              ], "major")
+    , ([root, majorThird   , perfectFifth, majorSeventh], "major 7th")
+    , ([root, majorThird   , perfectFifth, minorSeventh], "dominant 7th")
+    , ([root, minorThird   , perfectFifth              ], "minor")
+    , ([root, minorThird   , perfectFifth, minorSeventh], "minor 7th")
+    , ([root, minorThird   , tritone                   ], "diminshed")
+    , ([root, minorThird   , tritone     , minorSeventh], "half-diminshed")
+    , ([root, minorThird   , tritone     , majorSixth  ], "diminshed 7th")
+    , ([root, majorThird   , minorSixth                ], "augmented")
+    , ([root, perfectFourth, perfectFifth              ], "suspended 4th")
+    , ([root, majorSecond  , perfectFifth              ], "suspended 2nd")
     ]
 
 isChord :: Chord -> ChordTemplate -> Bool
