@@ -1,3 +1,4 @@
+{-# LANGUAGE MagicHash #-}
 module StringedInstrument where
 
 import Prelude hiding (String)
@@ -32,6 +33,12 @@ dadgadGuitar = simpleInstrument 22 [D, A, D, G, A, D]
 stdBanjo :: Instrument
 stdBanjo = String G 17 5 : simpleInstrument 22 [D, G, B, D]
 
+stdIrishBouzouki :: Instrument
+stdIrishBouzouki = simpleInstrument 22 [G, D, A, D]
+
+openAIrishBouzouki :: Instrument
+openAIrishBouzouki = simpleInstrument 22 [A, C#, A, E]
+
 fretboardScaleDiagram :: Scale -> PitchClass -> Instrument -> P.String
 fretboardScaleDiagram scale note strings =
     intercalate "\n" $ map strDiag (reverse strings)
@@ -44,8 +51,8 @@ fretboardScaleDiagram scale note strings =
     strDiag (String open frets 0) = this ++ strDiag next where
         next = String (open ~+ semitone) (frets - 1) 0
         this = if open `elem` scl
-            then "|-" ++ showNote open ++ "-"
-            else "|----"
+            then showNote open ++ "-|-"
+            else "---|-"
     strDiag (String open frets n) =
             "     " ++ strDiag (String open frets (n-1))
 

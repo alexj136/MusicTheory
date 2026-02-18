@@ -20,3 +20,7 @@ main = do
     putStrLn $ show $ inChordFingerings [D, F, A] (String G 22 0)
     putStrLn $ "\nC major scale on banjo:"
     putStrLn $ fretboardScaleDiagram majorScale C stdBanjo
+    putStrLn $ "\nKey of A:"
+    putLines showChord $ majorKey A
+    putStrLn $ "\nA major scale on Irish bouzouki in A-C#-A-E (open A) tuning:"
+    putStrLn $ fretboardScaleDiagram majorScale A openAIrishBouzouki

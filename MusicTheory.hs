@@ -143,6 +143,22 @@ unrelativise scale = root : unrel root scale
     unrel n (m:[o]) = [n +~ m]
     unrel n (m:s)   = let o = n +~ m in o : unrel o s
 
+chromaticScale :: Scale
+chromaticScale =
+    [ root
+    , minorSecond
+    , majorSecond
+    , minorThird
+    , majorThird
+    , perfectFourth
+    , tritone
+    , perfectFifth
+    , minorSixth
+    , majorSixth
+    , minorSeventh
+    , majorSeventh
+    ]
+
 majorScale :: Scale
 majorScale =
     [ root
