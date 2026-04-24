@@ -1,0 +1,2 @@
+#!/bin/bash
+ls *.py | entr python3 Main.py
