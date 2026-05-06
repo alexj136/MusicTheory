@@ -37,6 +37,9 @@ class PitchClass(IntEnum):
         }
         return names[self]
 
+    def __repr__(self) -> str:
+        return str(self)
+
 
 C = PitchClass.C
 Cs = PitchClass.Cs
@@ -104,6 +107,9 @@ class Interval:
             return f"{o} octaves"
         return f"{Interval(i)} and {Interval(12 * o)}"
 
+    def __repr__(self) -> str:
+        return str(self)
+
 
 @dataclass(frozen=True, order=True)
 class Note:
@@ -128,12 +134,16 @@ def octave(n: Note) -> int:
 
 def showChord(chord: Chord) -> str:
     if not chord:
-        return str(chord)
+        return "[]"
     root_note = chord[0]
     for template, name in chordTemplates.items():
         if isChord(chord, list(template)):
-            return f"{root_note} {name} {chord}"
-    return str(chord)
+            return f"{root_note} {name} {showPitchClassList(chord)}"
+    return showPitchClassList(chord)
+
+
+def showPitchClassList(items: List[PitchClass]) -> str:
+    return "[" + ",".join(str(item) for item in items) + "]"
 
 
 chordTemplates: Dict[Tuple[Interval, ...], str] = {}
@@ -185,8 +195,8 @@ chordTemplates = {
     tuple([root, minorThird, tritone, minorSeventh]): "half-diminshed",
     tuple([root, minorThird, tritone, majorSixth]): "diminshed 7th",
     tuple([root, majorThird, minorSixth]): "augmented",
-    tuple([root, perfectFourth, perfectFifth]): "suspended 4th",
     tuple([root, majorSecond, perfectFifth]): "suspended 2nd",
+    tuple([root, perfectFourth, perfectFifth]): "suspended 4th",
 }
 
 

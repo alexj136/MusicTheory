@@ -5,6 +5,10 @@ import TestMusicTheory
 import Utils
 
 
+def _show_list(items) -> str:
+    return "[" + ",".join(str(item) for item in items) + "]"
+
+
 def main() -> None:
     print("\nMUSIC THEORY")
     TestFramework.testMain(TestMusicTheory.tests)
@@ -17,9 +21,11 @@ def main() -> None:
     )
     print("\nFingerings in the [D, F, A] triad on the G string:")
     print(
-        StringedInstrument.inChordFingerings(
-            [MusicTheory.D, MusicTheory.F, MusicTheory.A],
-            StringedInstrument.String(open=MusicTheory.G, frets=22, offset=0),
+        _show_list(
+            StringedInstrument.inChordFingerings(
+                [MusicTheory.D, MusicTheory.F, MusicTheory.A],
+                StringedInstrument.String(open=MusicTheory.G, frets=22, offset=0),
+            )
         )
     )
     print("\nC major scale on banjo:")

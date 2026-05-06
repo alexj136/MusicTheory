@@ -58,7 +58,7 @@ def fretboardScaleDiagram(scale: Scale, note: PitchClass, strings: Instrument) -
             return ""
         if s.offset == 0:
             nxt = String(addPitchInterval(s.open, semitone), s.frets - 1, 0)
-            this = f"{showNote(s.open)}-|- " if s.open in scl else "---|- "
+            this = f"{showNote(s.open)}-|-" if s.open in scl else "---|-"
             return this + strDiag(nxt)
         return "     " + strDiag(String(s.open, s.frets, s.offset - 1))
 
