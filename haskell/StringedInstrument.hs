@@ -33,6 +33,9 @@ dadgadGuitar = simpleInstrument 22 [D, A, D, G, A, D]
 stdBanjo :: Instrument
 stdBanjo = String G 17 5 : simpleInstrument 22 [D, G, B, D]
 
+sawmillBanjo :: Instrument
+sawmillBanjo = String G 17 5 : simpleInstrument 22 [D, G, C, D]
+
 stdIrishBouzouki :: Instrument
 stdIrishBouzouki = simpleInstrument 22 [G, D, A, D]
 

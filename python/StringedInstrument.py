@@ -40,6 +40,7 @@ def simpleInstrument(frets: int, notes: List[PitchClass]) -> Instrument:
 stdGuitar: Instrument = simpleInstrument(22, [E, A, D, G, B, E])
 dadgadGuitar: Instrument = simpleInstrument(22, [D, A, D, G, A, D])
 stdBanjo: Instrument = [String(G, 17, 5)] + simpleInstrument(22, [D, G, B, D])
+sawmillBanjo: Instrument = [String(G, 15, 5)] + simpleInstrument(22, [D, G, C, D])
 stdIrishBouzouki: Instrument = simpleInstrument(22, [G, D, A, D])
 openAIrishBouzouki: Instrument = simpleInstrument(22, [A, Cs, A, E])
 
